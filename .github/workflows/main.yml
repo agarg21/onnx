@@ -13,14 +13,7 @@ env:
   TSAN_OPTIONS: suppressions=./tsan.supp
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # every day at midnight for reporting code coverage to codecov
-  push:
-    branches:
-      - main
-  pull_request:
-  merge_group:
-  workflow_dispatch:
+  workflow_dispatch:  # fork-only (agarg21 measurement): upstream triggers removed
 
 permissions:  # set top-level default permissions as security good practice
   contents: read
