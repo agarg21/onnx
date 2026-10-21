@@ -164,8 +164,19 @@ jobs:
         with:
           msbuild-architecture: x64
 
-      - name: Install external protobuf - Windows
+      - name: Cache external protobuf - Windows
+        id: protobuf-cache-win
         if: matrix.protobuf_type == 'External' && startsWith(matrix.os, 'windows')
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            protobuf-31.1/bin
+            protobuf-31.1/include
+            protobuf-31.1/lib
+          key: protobuf-win-${{ matrix.os }}-${{ runner.arch }}-${{ hashFiles('workflow_scripts/protobuf/build_protobuf_win.ps1') }}
+
+      - name: Install external protobuf - Windows
+        if: matrix.protobuf_type == 'External' && startsWith(matrix.os, 'windows') && steps.protobuf-cache-win.outputs.cache-hit != 'true'
         run: |
           if ($matrix.os -like "windows-11-arm*") {
               $cmake_arch = "ARM64"
@@ -211,6 +222,17 @@ jobs:
           ONNX_ML: ${{ matrix.onnx_ml }}
           ONNX_BUILD_TESTS: 1
           CMAKE_ARGS: "-DONNX_WERROR=ON -DONNX_USE_UNITY_BUILD=${{ matrix.unity_build }} -DONNX_HARDENING=ON"
+
+      - name: Use external protobuf - Windows
+        if: matrix.protobuf_type == 'External' && startsWith(matrix.os, 'windows')
+        run: |
+          # $env:Path set inside build_protobuf_win.ps1 doesn't outlive that step; export it so the
+          # ONNX build's find_package(Protobuf) finds this install instead of fetching protobuf again.
+          $protobuf_install_dir = Join-Path (Get-Location) "protobuf-31.1"
+          "$protobuf_install_dir\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "CMAKE_PREFIX_PATH=$protobuf_install_dir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          & "$protobuf_install_dir\bin\protoc.exe" --version
+        shell: pwsh
 
       - name: Build and install ONNX - Windows
         if: startsWith(matrix.os,'windows')
