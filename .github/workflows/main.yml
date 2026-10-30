@@ -35,83 +35,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest, macos-latest]
-        # Retain the legacy values only to preserve required status-check names.
-        autogenerate_files: [0]
-        # Test on the oldest and latest supported Python versions
-        debug_build: [0]
-        onnx_ml: [1]
-        protobuf_type: ['Internal']
-        python_version: ['3.15t', '3.15', '3.14t', '3.14', '3.11']
-        unity_build: [0]
-
+        # FORK-ONLY verification branch: only the Windows External-protobuf leg.
         include:
-          # Exercise what a fresh `pip install onnx` produces - gencode from the
-          # pinned protoc plus the newest protobuf runtime - without adding
-          # another Linux job. The remaining matrix entries keep testing the
-          # runtime pinned in requirements-release_test.txt.
-          - python_version: "3.14"
-            os: "ubuntu-24.04"
-            newest_protobuf: 1
-            job_name_suffix: ", newest_protobuf=1"
-
-          # Exercise clang-cl without adding another Windows job. The remaining
-          # Windows matrix entries continue to provide MSVC coverage.
-          - python_version: "3.14"
-            os: "windows-latest"
-            cmake_generator_args: "-T ClangCL"
-            job_name_suffix: ", compiler=clang-cl"
-
-          # Ubuntu debug build runs with sanitizer
-          - python_version: "3.14"
-            autogenerate_files: 0
-            debug_build: 1
-            onnx_ml: 1
-            os: "ubuntu-24.04"
-            protobuf_type: 'Internal'
-            unity_build: 0
-
-          # Ubuntu debug build with TSAN (free-threaded Python)
-          - python_version: "3.14t"
-            autogenerate_files: 0
-            debug_build: 1
-            onnx_ml: 1
-            os: "ubuntu-24.04"
-            protobuf_type: 'Internal'
-            unity_build: 0
-
-          # Test compilation with external protobuf (shared on Linux, static on Windows).
-          - python_version: "3.14"
-            autogenerate_files: 0
-            debug_build: 0
-            onnx_ml: 1
-            os: "ubuntu-24.04"
-            protobuf_type: 'External'
-            unity_build: 0
           - python_version: "3.14"
             autogenerate_files: 0
             debug_build: 0
             onnx_ml: 1
             os: "windows-2022"
-            protobuf_type: 'External'
-            unity_build: 0
-          # The unity build may surface name clashes at compile time.
-          - python_version: '3.14'
-            autogenerate_files: 1
-            debug_build: 0
-            onnx_ml: 1
-            os: "ubuntu-24.04"
-            protobuf_type: 'External'
-            unity_build: 1
-
-          # Toggling onnx_ml should be additive. There is likely very
-          # different signal in testing it in relation with other
-          # parameters.
-          - python_version: '3.14'
-            autogenerate_files: 0
-            debug_build: 0
-            onnx_ml: 0
-            os: "ubuntu-24.04"
             protobuf_type: 'External'
             unity_build: 0
 
